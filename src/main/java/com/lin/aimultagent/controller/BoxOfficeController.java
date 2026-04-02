@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 public class BoxOfficeController {
 
     // 这里你自己填
-    private static final String API_KEY = "Shanhai-VB5fi2kalotIyCqe5NHcZJA5MNMaVTacX6EIcbuNoalDcvX0";
+    private static final String API_KEY = "api.key";
 
     private static final String BOX_OFFICE_URL = "https://apione.apibyte.cn/boxoffice";
 
