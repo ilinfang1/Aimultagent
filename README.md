@@ -1,0 +1,555 @@
+学伴 OS 开发手册
+1. 文档说明
+
+本文档用于说明学伴 OS 项目的当前结构、开发方式、模块职责、联调方法、部署建议与后续扩展方向。文档面向后续开发、功能迭代、样式调整、第三方接口接入与项目交接使用。
+
+本文档基于当前项目代码结构整理。当前页面主装配集中在 App.vue，页面通过 useStudyCompanionApp() 统一获取状态与方法；后端当前已存在音乐统一代理控制器 MusicController；主样式文件为 src/styles/app.css。
+
+2. 项目简介
+
+学伴 OS 是一个围绕“沉浸式学习陪伴”设计的前后端项目。系统当前主要提供以下能力：
+
+用户登录 / 注册
+专注计时与任务输入
+AI 对话陪伴
+音乐搜索与播放
+白噪音环境音
+多智能体监控矩阵
+每日悬赏令
+数据洞察与荣誉殿堂
+商城与基地等级
+实时电影票房排行展示
+
+从当前页面结构看，项目已经形成完整的主界面：顶部导航、左侧音乐与任务区、中间专注与对话区、底部统计卡片、右侧票房区，以及多个弹窗和全屏音乐播放器。
+
+3. 技术栈
+   3.1 前端
+   Vue 3
+   Vite
+   Composition API
+   响应式状态管理（以 composables 为主）
+   单文件组件（SFC）
+   自定义 CSS 主题与布局系统
+
+当前 App.vue 使用 <script setup> 方式组织页面，并通过总控方法统一注入状态。页面本身更偏向“装配层”，而不是“重业务逻辑层”。
+
+3.2 后端
+Spring Boot
+RESTful 风格接口
+第三方能力聚合 / 转发
+音频流代理
+JSON 数据透传与包装
+
+当前后端已存在 MusicController，用于统一处理多来源音乐搜索、详情查询与音频流代理。
+
+4. 当前项目结构建议理解
+   frontend-ui/
+   ├─ src/
+   │  ├─ App.vue
+   │  ├─ services/
+   │  │  └─ api.js
+   │  ├─ composables/
+   │  │  ├─ useStudyCompanionApp.js
+   │  │  ├─ useAuth.js
+   │  │  ├─ useMusicSearch.js
+   │  │  ├─ useAmbientAudio.js
+   │  │  ├─ useQuestSystem.js
+   │  │  ├─ useTaskTimer.js
+   │  │  ├─ useVoiceMedia.js
+   │  │  ├─ useChatGateway.js
+   │  │  ├─ useAgentMonitor.js
+   │  │  ├─ useDataCenter.js
+   │  │  ├─ useAchievements.js
+   │  │  ├─ useEnvironment.js
+   │  │  ├─ useLampControl.js
+   │  │  └─ useGamePersistence.js
+   │  └─ styles/
+   │     └─ app.css
+   │
+   backend/
+   └─ src/main/java/com/lin/aimultagent/
+   └─ controller/
+   ├─ MusicController.java
+   ├─ BoxOfficeController.java（建议）
+   └─ TtsController.java（建议）
+   结构说明
+   App.vue：页面总装配文件
+   services/api.js：统一接口请求入口
+   composables/：按功能拆分业务逻辑
+   app.css：全局样式、布局、主题变量
+   controller/：后端第三方能力聚合入口
+
+当前页面对 useStudyCompanionApp() 解构了大量状态与方法，说明该文件是前端总控核心入口。
+
+5. 前端架构说明
+   5.1 App.vue 的职责
+
+App.vue 当前负责以下内容：
+
+登录页和主界面的切换
+顶部导航区渲染
+左侧音乐搜索、音源选择、每日悬赏令、迷你播放器
+中间专注计时区
+中间聊天陪伴区
+底部统计信息卡片
+右侧票房榜区域
+商城、数据洞察、荣誉殿堂弹窗
+全屏音乐播放器
+
+从模板结构可以看到主布局为：
+
+apple-nav
+main-layout-row
+left-sidebar
+main-container
+boxoffice-section
+
+这说明页面已经不是简单 demo，而是具备明确信息分区的沉浸式界面。
+
+5.2 useStudyCompanionApp.js 的职责
+
+该模块负责聚合前端所有核心业务能力，然后统一返回给页面使用。建议将其理解为“前端页面总控层”。
+
+它当前负责聚合的能力包括：
+
+认证能力
+音乐能力
+白噪音能力
+成就能力
+任务系统
+数据中心
+环境系统
+灯绳交互
+语音能力
+AI 聊天网关
+计时器系统
+游戏存档与加载
+
+页面通过解构该模块获取例如：
+
+musicState
+questState
+audioState
+achievementState
+dataCenter
+timerState
+chatHistory
+handleUserMessage
+startTimer
+stopTimer
+buyItem
+
+这说明页面层和业务层已经被一定程度解耦。
+
+5.3 services/api.js 的职责
+
+建议所有前端对后端的请求都统一放到 services/api.js 里管理，而不要在 App.vue 或具体 composable 中直接写 fetch 地址。
+
+这样做的好处有：
+
+统一维护 API 地址
+统一异常处理
+便于切换开发环境 / 生产环境
+便于后续接入桌面端和移动端
+6. 页面模块说明
+   6.1 登录认证界面
+
+登录页当前包含：
+
+灯绳交互
+登录 / 注册切换
+用户名与密码输入
+灯亮后解锁表单的视觉效果
+
+这部分强调沉浸式开场交互，不建议随意打散，除非后续单独抽成认证组件。
+
+6.2 左侧边栏
+
+左侧边栏当前包含：
+
+音乐矩阵
+音乐来源选择
+搜索结果列表
+每日悬赏令
+迷你播放器
+播放进度条
+
+这部分是用户的轻交互区域。音乐检索与播放状态都围绕此区域展开。
+
+6.3 中间主区域
+
+中间主区域当前包含：
+
+专注主标题
+计时圆盘
+当前任务输入框
+AI 时间评估
+开始 / 结束专注按钮
+对话聊天区
+上传图片、语音识别、输入框与发送按钮
+底部统计区
+
+这是当前项目的核心使用区域。专注、对话、行为反馈全部集中在这里。
+
+6.4 右侧票房区
+
+右侧当前放置了“实时电影票房”卡片，用于展示：
+
+更新时间
+排行列表
+票房数据
+票房占比
+上映信息
+
+当前模板中已将票房列表限定为前 8 条显示，以保证右侧信息面板不会过长。
+
+7. 样式系统说明
+
+主样式当前集中在 src/styles/app.css。该文件承担了以下职责：
+
+全局 reset
+布局定义
+主题变量定义
+登录页样式
+左右分栏样式
+聊天区样式
+卡片组件样式
+动画定义
+音乐播放器样式
+弹窗样式
+监控矩阵样式
+
+其中最核心的是变量系统：
+
+--card-bg
+--nav-bg
+--border-light
+--input-bg
+--ai-bubble
+--modal-bg
+--timer-border
+--stat-icon-bg
+
+深色主题和量子主题当前会把这些变量改成深色，所以页面中的对话框、任务卡、统计卡、计时器底板等都会跟着变暗。也就是说，这些框的颜色主要不是由“时间”直接决定，而是由主题变量决定。
+
+8. 主题、环境与背景逻辑
+
+当前项目中，背景大致分为三类：
+
+8.1 登录态背景
+
+未登录时使用 auth-aurora-bg。
+
+8.2 基础等级背景
+
+登录后且 baseLevel === 1 时，使用 dynamic-time-bg，背景来自 envState.skyStyle。
+
+8.3 高等级背景
+
+登录后且 baseLevel >= 3 时，切换到 aurora-bg。
+
+因此：
+
+大背景 有时间环境参与
+卡片底板 则主要由主题变量决定
+
+这一点在模板和样式中都能看出来。
+
+9. 后端架构说明
+   9.1 当前 MusicController 的职责
+
+MusicController 当前负责：
+
+根据来源搜索歌曲
+获取歌曲详情
+代理第三方音频流
+直接转发外部音频流链接
+
+已支持的 source 包括：
+
+kuwo
+migu
+5sing
+soda
+singduck
+
+这是当前项目中最典型的“第三方能力聚合控制器”。它解决了前端直接访问第三方接口时会遇到的：
+
+CORS
+key 暴露
+资源地址不可直接播
+第三方返回结构不统一
+
+等问题。
+
+9.2 推荐继续新增的后端控制器
+
+建议继续采用相同模式新增：
+
+BoxOfficeController.java
+TtsController.java
+
+原则是：
+
+前端永远只请求你自己的后端
+后端再去代理第三方
+所有第三方异常在后端统一处理
+10. 第三方能力接入规范
+
+今后接入任何新接口，建议统一遵循下面流程。
+
+10.1 第一步：后端创建代理接口
+
+不要直接在前端请求第三方 API。应该先在后端新增控制器，例如：
+
+/api/music/...
+/api/boxoffice/...
+/api/tts/...
+10.2 第二步：前端 services/api.js 增加方法
+
+例如：
+
+export const getRealtimeBoxOffice = () => request('/api/boxoffice/realtime')
+10.3 第三步：业务 composable 消费接口
+
+例如：
+
+音乐 → useMusicSearch
+TTS → useVoiceMedia
+白噪音 → useAmbientAudio
+任务 → useQuestSystem
+10.4 第四步：页面只绑定状态与事件
+
+例如 App.vue 里只做：
+
+渲染
+v-model
+按钮点击
+动画展示
+
+不要在页面中堆砌第三方请求和复杂处理逻辑。
+
+11. 当前重要功能说明
+    11.1 音乐系统
+
+音乐系统建议统一由 useMusicSearch.js 管理。未来应涵盖：
+
+多音源切换
+搜索
+详情获取
+播放 / 暂停
+上一首 / 下一首
+播放模式
+进度条
+当前索引
+全屏播放器与迷你播放器同步
+
+当前页面已经有：
+
+音乐源切换
+搜索输入
+搜索结果点击
+迷你播放器
+进度条
+全屏音乐播放器
+
+说明音乐系统已经具备完整可扩展基础。
+
+11.2 每日悬赏令
+
+任务系统建议由 useQuestSystem.js 管理。其职责包括：
+
+初始化每日任务
+判断是否跨天
+完成任务
+发放奖励
+刷新存档
+
+当前页面模板通过 questState.quests 渲染任务列表，并将 completeQuest(quest) 绑定到任务完成按钮。是否显示完成态、是否点击后删除、是否第二天刷新，都应在该模块处理。
+
+11.3 频率同调（白噪音）
+
+白噪音模块建议由 useAmbientAudio.js 管理：
+
+环境音列表
+当前音轨
+是否正在播放
+音量调节
+面板开关
+
+当前页面顶部频率同调按钮点击后会展开一个轨道列表，并调用 playTrack(track)。这说明资源 URL 和播放失败问题应该在 composable 层处理，而不是模板层。
+
+11.4 语音系统
+
+语音能力建议由 useVoiceMedia.js 管理，职责包括：
+
+角色音色映射
+TTS 语音合成
+AI 说话状态控制
+录音识别
+图片选择
+
+当前页面已经有：
+
+语音开关按钮
+角色说话动态条
+录音按钮
+上传按钮
+
+说明语音系统已经具备完整 UI 入口。
+
+12. 开发流程建议
+    12.1 新增一个功能的标准步骤
+
+推荐顺序：
+
+明确功能属于哪个模块
+后端先加统一代理接口
+前端 services/api.js 增加方法
+新增或修改 composable
+页面模板接入状态与按钮
+样式文件补充样式
+自测与异常兜底
+12.2 样式修改建议
+先改变量，再改组件样式
+优先加“覆盖样式”，不要一开始就大面积重写
+如果是单个区域问题，尽量只改对应 class
+若视觉差异来自主题，优先检查 theme-dark、theme-quantum 的变量定义
+12.3 不建议的写法
+页面里直接写第三方 fetch
+页面里直接处理复杂业务状态
+同一个功能同时在页面和 composable 双写逻辑
+直接在前端硬编码第三方音频 URL
+13. 本地启动方式
+    13.1 前端
+
+在前端目录执行：
+
+npm install
+npm run dev
+13.2 后端
+
+在 Spring Boot 工程目录执行：
+
+mvn spring-boot:run
+
+或直接运行启动类。
+
+13.3 联调要求
+
+当前前端依赖后端能力较多，因此开发时必须保证后端处于运行状态。否则以下功能会失败：
+
+登录 / 注册
+AI 对话
+音乐搜索 / 播放
+票房接口
+语音合成
+数据中心
+部分成就与任务联动
+14. 部署与打包建议
+    14.1 Web 部署
+
+推荐把前端接口地址改成环境变量，而不是写死 localhost。例如：
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+开发环境：
+
+VITE_API_BASE_URL=http://localhost:8080
+
+生产环境：
+
+VITE_API_BASE_URL=https://你的后端域名
+14.2 桌面应用
+
+推荐使用 Electron：
+
+前端打包生成 dist
+Electron 加载 dist/index.html
+如有需要再让 Electron 启动后端 jar
+14.3 手机 App
+
+推荐使用 Capacitor：
+
+前端打包
+接入 Capacitor
+Android 用 Android Studio 打包 APK
+iOS 用 Xcode 打包
+
+手机端前提是后端必须部署到线上，不可继续使用 localhost。
+
+15. 常见问题排查
+    15.1 音乐播放失败
+
+优先检查：
+
+source 是否正确
+musicId / index 是否传入
+后端代理是否返回 JSON 而不是 HTML
+第三方返回音频链接是否为空
+音频流代理是否成功
+15.2 TTS 播放失败
+
+优先检查：
+
+/api/tts/speak 是否已注册
+后端是否返回 data.audio
+audio 是否真的是可解码 Base64
+浏览器是否支持对应音频格式
+是否需要把 Base64 转 Blob 再播放
+15.3 白噪音 403
+
+通常说明外部音频源不稳定或存在防盗链。更稳的方式是把白噪音文件放在项目自己的静态目录中。
+
+15.4 每日悬赏令点击没反馈
+
+优先检查：
+
+completeQuest(quest) 是否触发
+useQuestSystem 是否更新状态
+页面模板是否展示 quest.completed
+是否采用“完成后删除”还是“完成后置灰”
+15.5 对话框圆角异常
+
+通常不是圆角值没写，而是父容器没裁切。优先检查：
+
+.apple-card
+.chat-container
+.chat-header
+
+是否存在 overflow: hidden 与背景覆盖问题。样式文件中这几个类都在当前版本中定义。
+
+16. 推荐后续优化方向
+    16.1 近期建议
+    把 App.vue 继续组件化
+    把票房榜做成固定右侧悬浮面板
+    把任务系统做成明确的“已完成 / 已移除”两种模式
+    音乐系统补齐稳定的播放模式切换
+    白噪音本地化
+    TTS 音色映射完善
+    16.2 中期建议
+    后端 controller 继续下沉到 service 层
+    增加统一异常处理
+    增加日志打印与接口调试开关
+    把环境、时间、主题做成更细粒度控制
+    前端增加更稳定的本地持久化与跨天刷新逻辑
+17. 总结
+
+当前项目已经具备一个比较完整的“学习陪伴操作系统”雏形，其优势在于：
+
+页面沉浸感强
+业务能力拆分明确
+总控层结构已经形成
+后端已开始承担第三方聚合职责
+音乐、任务、对话、票房、数据等模块边界相对清晰
+
+后续开发时，建议继续坚持以下原则：
+
+页面轻逻辑
+功能按 composable 拆分
+接口统一走 services/api.js
+第三方能力统一由后端代理
+样式优先改变量，再改组件
+新功能优先补业务层，再接页面层
+
+按照这套方式继续迭代，项目会更稳定，也更容易维护与交接。
