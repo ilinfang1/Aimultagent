@@ -3,7 +3,7 @@ server:
 
 gemini:
   # ????????? API KEY
-  api-key: "AIzaSyCkyRa5ntLeOxUiDih0fMcvnmsuB6xojQY"
+  api-key: "api.key"
   # ???? Clash ????
   proxy-host: "127.0.0.1"
   proxy-port: 7897
@@ -14,7 +14,7 @@ spring:
     url: jdbc:mysql://localhost:3306/cyber_tutor?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     # ??????????
     username: root
-    password: 12345  # ?? ?????? MySQL ???
+    password: 123456  # ?? ?????? MySQL ???
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
