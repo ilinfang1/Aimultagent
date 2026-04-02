@@ -22,7 +22,7 @@ import java.util.Map;
 public class MusicController {
 
     // 这里你自己填
-    private static final String API_KEY = "Shanhai-VB5fi2kalotIyCqe5NHcZJA5MNMaVTacX6EIcbuNoalDcvX0";
+    private static final String API_KEY = "api.key";
 
     private static final String KUWO_URL = "https://apione.apibyte.cn/kwmusic";
     private static final String MIGU_URL = "https://apione.apibyte.cn/mgmusic";
