@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 public class TtsController {
 
     // 这里填你自己的山海云端 key
-    private static final String API_KEY = "Shanhai-VB5fi2kalotIyCqe5NHcZJA5MNMaVTacX6EIcbuNoalDcvX0";
+    private static final String API_KEY = "api.key";
 
     private static final String TTS_URL = "https://apione.apibyte.cn/tts";
 
